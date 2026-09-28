@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<title>ESIGN NEW - ESIGN</title>
+
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
+
+:root{
+  --cyan:#00e5ff;
+  --blue:#3b82f6;
+  --violet:#8b5cf6;
+  --pink:#ec4899;
+  --green:#22c55e;
+  --bg:#02030a;
+  --bg2:#070a14;
+  --panel:rgba(9,13,27,.78);
+  --panel2:rgba(13,18,38,.66);
+  --border:rgba(0,229,255,.16);
+  --border2:rgba(139,92,246,.28);
+  --text:#f7fbff;
+  --muted:rgba(226,239,255,.54);
+  --shadow:0 25px 80px rgba(0,0,0,.55);
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Tajawal','Segoe UI',sans-serif;
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  background:
+    radial-gradient(circle at 15% 10%,rgba(0,229,255,.12),transparent 28%),
+    radial-gradient(circle at 90% 18%,rgba(139,92,246,.13),transparent 30%),
+    radial-gradient(circle at 50% 100%,rgba(236,72,153,.08),transparent 35%),
+    linear-gradient(145deg,#010207,#050817 55%,#02030a);
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:44px 44px;
+  mask-image:linear-gradient(to bottom,#000,transparent 85%);
+}
+body::after{
+  content:"";position:fixed;inset:-20%;z-index:0;pointer-events:none;
+  background:conic-gradient(from 0deg at 50% 50%,transparent 0 25%,rgba(0,229,255,.025),transparent 38% 62%,rgba(139,92,246,.025),transparent 75%);
+  animation:aurora 16s linear infinite;
+}
+@keyframes aurora{to{transform:rotate(360deg)}}
+
+#bgCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ===== NEW TOAST ===== */
+#toast{
+  position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-180px);
+  z-index:9999;width:min(440px,calc(100vw - 24px));
+  padding:10px;border:1px solid rgba(0,229,255,.22);
+  border-radius:22px;background:rgba(4,8,20,.88);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  box-shadow:0 18px 70px rgba(0,0,0,.65),0 0 40px rgba(0,229,255,.08);
+  display:flex;align-items:center;gap:11px;opacity:0;
+  transition:transform .7s cubic-bezier(.2,1.35,.3,1),opacity .35s ease;
+}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.hide{transform:translateX(-50%) translateY(-180px);opacity:0}
+.toast-icon{
+  width:45px;height:45px;flex:0 0 45px;border-radius:15px;display:grid;place-items:center;
+  font-size:21px;background:linear-gradient(145deg,rgba(0,229,255,.16),rgba(139,92,246,.16));
+  border:1px solid rgba(0,229,255,.24);box-shadow:inset 0 0 20px rgba(0,229,255,.08);
+  animation:toastIcon 2s ease-in-out infinite;
+}
+@keyframes toastIcon{50%{transform:translateY(-3px) rotate(3deg);box-shadow:0 0 24px rgba(0,229,255,.2)}}
+.toast-text{flex:1;text-align:right}
+.toast-title{
+  font-size:13px;font-weight:900;
+  background:linear-gradient(90deg,#fff,var(--cyan),#a78bfa);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.toast-sub{margin-top:3px;font-size:10px;color:var(--muted)}
+.toast-badge{
+  padding:6px 9px;border-radius:10px;font-size:9px;font-weight:900;color:#031018;
+  background:linear-gradient(135deg,var(--cyan),#67e8f9);
+  box-shadow:0 0 20px rgba(0,229,255,.22);white-space:nowrap;
+}
+
+/* ===== SIDE IMAGE ===== */
+.side-line{
+  position:fixed;right:19px;top:15%;height:62%;width:1px;z-index:10;
+  background:linear-gradient(to bottom,transparent,var(--cyan) 18%,var(--violet) 55%,var(--pink) 82%,transparent);
+  box-shadow:0 0 14px rgba(0,229,255,.45);
+}
+.side-avatar{
+  position:absolute;top:-29px;left:50%;transform:translateX(-50%);
+  width:55px;height:55px;border-radius:18px;padding:2px;
+  background:linear-gradient(145deg,var(--cyan),var(--violet),var(--pink));
+  box-shadow:0 0 28px rgba(0,229,255,.25);
+}
+.side-avatar::after{
+  content:"";position:absolute;inset:-7px;border:1px solid rgba(0,229,255,.12);
+  border-radius:23px;animation:ring 2.8s infinite;
+}
+@keyframes ring{50%{transform:scale(1.12);opacity:.35}100%{transform:scale(1);opacity:1}}
+.side-avatar img{width:100%;height:100%;object-fit:cover;border-radius:15px;display:block;background:#050812}
+
+/* ===== LAYOUT ===== */
+.shell{position:relative;z-index:1;max-width:600px;margin:auto;padding:22px 13px 48px}
+.glass{
+  background:linear-gradient(145deg,rgba(12,18,38,.82),rgba(4,7,18,.72));
+  border:1px solid var(--border);
+  box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.035);
+  backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);
+}
+
+/* ===== HERO ===== */
+.hero{
+  position:relative;overflow:hidden;border-radius:32px;padding:22px;margin-bottom:14px;
+}
+.hero::before{
+  content:"";position:absolute;width:330px;height:330px;right:-170px;top:-180px;
+  background:radial-gradient(circle,rgba(0,229,255,.17),transparent 68%);animation:orb 6s ease-in-out infinite;
+}
+.hero::after{
+  content:"";position:absolute;width:280px;height:280px;left:-150px;bottom:-170px;
+  background:radial-gradient(circle,rgba(139,92,246,.17),transparent 68%);animation:orb 7s ease-in-out infinite reverse;
+}
+@keyframes orb{50%{transform:scale(1.18) translate(-8px,8px);opacity:.8}}
+
+.hero-top{display:flex;align-items:center;gap:16px;position:relative;z-index:2}
+.app-icon{
+  width:92px;height:92px;flex:0 0 92px;border-radius:27px;padding:2px;
+  background:linear-gradient(145deg,var(--cyan),var(--violet),var(--pink));
+  box-shadow:0 12px 38px rgba(0,229,255,.18),0 0 60px rgba(139,92,246,.12);
+  animation:appFloat 4s ease-in-out infinite;position:relative;
+}
+.app-icon::before{
+  content:"";position:absolute;inset:-6px;border-radius:31px;
+  border:1px solid rgba(0,229,255,.13);animation:iconRing 3s infinite;
+}
+.app-icon img{width:100%;height:100%;object-fit:cover;border-radius:24px;display:block}
+@keyframes appFloat{50%{transform:translateY(-6px) rotate(-1deg)}}
+@keyframes iconRing{50%{transform:scale(1.08);opacity:.35}}
+
+.eyebrow{
+  display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border-radius:9px;
+  font-size:9px;font-weight:900;letter-spacing:2px;color:#c9faff;
+  background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.2);
+}
+.eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);animation:live 1.4s infinite}
+@keyframes live{50%{opacity:.35;transform:scale(.65)}}
+.app-name{font-size:28px;font-weight:900;margin-top:6px;letter-spacing:-.5px}
+.app-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.new-badge{
+  display:inline-flex;margin-top:8px;padding:5px 10px;border-radius:9px;font-size:9px;font-weight:900;
+  background:linear-gradient(135deg,rgba(0,229,255,.15),rgba(139,92,246,.18));
+  border:1px solid rgba(0,229,255,.2);color:#bffaff;
+}
+
+/* ===== STATS ===== */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px;position:relative;z-index:2}
+.stat-card{
+  padding:13px 7px;text-align:center;border-radius:16px;
+  background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);
+  transition:.3s;position:relative;overflow:hidden;
+}
+.stat-card::after{content:"";position:absolute;bottom:0;left:15%;right:15%;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);box-shadow:0 0 12px var(--cyan)}
+.stat-card:hover{transform:translateY(-3px);border-color:rgba(0,229,255,.28)}
+.stat-num{font-size:20px;font-weight:900;background:linear-gradient(135deg,#fff,var(--cyan),#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-label{font-size:9px;color:var(--muted);margin-top:3px}
+
+/* ===== DOWNLOAD ===== */
+.btn-wrap{margin-top:15px;position:relative;z-index:2}
+.download-btn{
+  width:100%;height:62px;border:1px solid rgba(255,255,255,.12);border-radius:18px;
+  color:#031018;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;
+  position:relative;overflow:hidden;background:linear-gradient(110deg,var(--cyan),#67e8f9,var(--violet),var(--cyan));
+  background-size:300% 100%;box-shadow:0 14px 38px rgba(0,229,255,.16),inset 0 1px rgba(255,255,255,.6);
+  animation:buttonFlow 6s linear infinite;transition:transform .2s,filter .2s;
+}
+@keyframes buttonFlow{to{background-position:300% 0}}
+.download-btn:hover{filter:brightness(1.08);transform:translateY(-2px)}
+.download-btn:active{transform:scale(.97)}
+.download-btn::after{
+  content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);
+  transform:translateX(-120%);animation:shine 3.2s infinite;
+}
+@keyframes shine{45%,100%{transform:translateX(120%)}}
+.progress-fill{position:absolute;inset:0 auto 0 0;width:0;background:rgba(255,255,255,.22);transition:width .05s linear}
+.btn-content{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:9px}
+.success-icon{display:none}
+
+/* ===== EXTRA CONTROL CHIPS ===== */
+.quick-bar{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;
+}
+.quick-chip{
+  padding:10px 6px;text-align:center;border-radius:14px;background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.06);font-size:9px;color:rgba(235,246,255,.62);
+}
+.quick-chip b{display:block;color:#fff;font-size:11px;margin-bottom:2px}
+.quick-chip i{font-style:normal;color:var(--cyan)}
+
+/* ===== TUTORIAL ===== */
+.tutorial-link{
+  margin-top:14px;padding:15px;border-radius:20px;text-decoration:none;
+  display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;
+  transition:.3s;border:1px solid rgba(139,92,246,.2)!important;
+}
+.tutorial-link::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(139,92,246,.08),transparent);transform:translateX(-100%);transition:.6s}
+.tutorial-link:hover::before{transform:translateX(100%)}
+.tutorial-link:hover{transform:translateY(-2px);border-color:rgba(139,92,246,.45)!important}
+.tutorial-icon{
+  width:45px;height:45px;flex:0 0 45px;display:grid;place-items:center;border-radius:14px;
+  font-size:20px;background:linear-gradient(145deg,rgba(139,92,246,.18),rgba(0,229,255,.08));
+  border:1px solid rgba(139,92,246,.25)
+}
+.tutorial-text p{font-size:12px;font-weight:800;color:#fff}
+.tutorial-text span{display:block;font-size:10px;color:#a78bfa;margin-top:3px}
+
+/* ===== FEATURES ===== */
+.features-panel{border-radius:29px;padding:21px;margin-top:14px}
+.section-title{text-align:center;font-size:18px;font-weight:900;margin-bottom:17px}
+.section-title::after{content:"";display:block;width:70px;height:2px;margin:8px auto 0;background:linear-gradient(90deg,transparent,var(--cyan),var(--violet),transparent);box-shadow:0 0 15px rgba(0,229,255,.5)}
+.features-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.feature-card{
+  position:relative;padding:15px;border-radius:18px;display:flex;flex-direction:column;gap:7px;
+  background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  border:1px solid rgba(255,255,255,.065);transition:.3s;overflow:hidden;
+}
+.feature-card::before{content:"";position:absolute;right:0;top:13px;width:3px;height:28px;border-radius:5px;background:linear-gradient(var(--cyan),var(--violet));box-shadow:0 0 12px rgba(0,229,255,.5)}
+.feature-card:hover{transform:translateY(-4px) scale(1.01);border-color:rgba(0,229,255,.22);box-shadow:0 15px 35px rgba(0,0,0,.28)}
+.feat-icon{font-size:21px;filter:drop-shadow(0 0 8px rgba(0,229,255,.18))}
+.feat-text{font-size:11px;color:#dce8f5;line-height:1.55}
+
+/* ===== NEW POWER SECTION ===== */
+.power-panel{margin-top:14px;padding:19px;border-radius:25px}
+.power-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.power-head b{font-size:14px}
+.live-pill{font-size:8px;font-weight:900;padding:5px 8px;border-radius:9px;color:#86efac;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.18)}
+.power-list{display:grid;gap:8px}
+.power-item{
+  display:flex;align-items:center;gap:10px;padding:11px;border-radius:14px;
+  background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.055)
+}
+.power-item .pi{width:31px;height:31px;display:grid;place-items:center;border-radius:10px;background:rgba(0,229,255,.08);font-size:14px}
+.power-item strong{font-size:10px;display:block}
+.power-item span{font-size:9px;color:var(--muted);display:block;margin-top:2px}
+
+/* ===== FOOTER ===== */
+.footer{text-align:center;margin-top:14px;padding:19px;border-radius:21px;font-size:12px;color:var(--muted)}
+.footer-logo{
+  font-size:25px;font-weight:900;letter-spacing:4px;margin-bottom:6px;
+  background:linear-gradient(90deg,#fff,var(--cyan),#a78bfa,var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.footer a{color:var(--cyan);font-weight:900;text-decoration:none}
+
+/* ===== PARTICLES ===== */
+.particle{position:fixed;border-radius:50%;pointer-events:none;z-index:0;animation:floatUp linear infinite}
+@keyframes floatUp{
+  0%{transform:translateY(105vh) scale(0);opacity:0}
+  12%{opacity:.65}88%{opacity:.18}
+  100%{transform:translateY(-12vh) scale(1);opacity:0}
+}
+
+@media(max-width:420px){
+  .shell{padding-left:10px;padding-right:10px}
+  .hero,.features-panel{padding:19px}
+  .hero-top{gap:13px}.app-icon{width:79px;height:79px;flex-basis:79px}.app-name{font-size:23px}
+  .features-grid{gap:7px}.feature-card{padding:13px}.feat-text{font-size:10px}
+  .side-line{display:none}.quick-chip{padding:9px 4px}
+}
+
+</style>
+</head>
+
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<!-- TOAST -->
+<div id="toast">
+
+  <div class="toast-icon">🚀</div>
+
+  <div class="toast-text">
+
+    <div class="toast-title">
+      ESIGN PRO — إصدار جديد جاهز!
+    </div>
+
+    <div class="toast-sub">
+      واجهة جديدة وتجربة أسرع على iPhone
+    </div>
+
+  </div>
+
+  <div class="toast-badge">
+    LIVE ✦
+  </div>
+
+</div>
+
+<!-- SIDE LINE -->
+<div class="side-line">
+
+  <div class="side-avatar">
+
+    <img
+      src="https://i.ibb.co/d0crs5xd/image.png"
+      alt="Owner"
+    >
+
+  </div>
+
+</div>
+
+<!-- MAIN -->
+<main class="shell">
+
+  <!-- HERO -->
+  <section class="hero glass">
+
+    <div class="hero-top">
+
+      <div class="app-icon">
+
+        <img
+          src="https://i.ibb.co/gLRxHxZ2/icon-3x-2.png"
+          alt="ESIGN"
+        >
+
+      </div>
+
+      <div>
+
+        <div class="eyebrow">
+          ESIGN NEW
+        </div>
+
+        <h1 class="app-name">
+          ايساين ESIGN
+        </h1>
+
+        <div class="app-sub">
+          توقيع التطبيقات بدون كمبيوتر
+        </div>
+
+        <div class="new-badge">
+          ✦ شهادة مجانية جديدة ✦
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+
+      <div class="stat-card">
+
+        <div class="stat-num">
+          100%
+        </div>
+
+        <div class="stat-label">
+          مجاني
+        </div>
+
+      </div>
+
+      <div class="stat-card">
+
+        <div class="stat-num">
+          iOS
+        </div>
+
+        <div class="stat-label">
+          متوافق
+        </div>
+
+      </div>
+
+      <div class="stat-card">
+
+        <div class="stat-num">
+          Pro
+        </div>
+
+        <div class="stat-label">
+          إصدار
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- DOWNLOAD -->
+    <div class="btn-wrap">
+
+      <button
+        class="download-btn"
+        onclick="startDownload(this, 'itms-services://?action=download-manifest&url=https://github.com/helooio/Kjree/releases/download/Es/manifest.plist')"
+      >
+
+        <div class="progress-fill"></div>
+
+        <div class="btn-content">
+
+          <span class="btnText">
+            ⬇ تثبيت الآن
+          </span>
+
+          <span class="success-icon">
+            ✅
+          </span>
+
+        </div>
+
+      </button>
+
+    </div>
+
+    <!-- QUICK STATUS -->
+    <div class="quick-bar">
+      <div class="quick-chip"><b>⚡ سريع</b><i>تثبيت مباشر</i></div>
+      <div class="quick-chip"><b>🔒 آمن</b><i>واجهة محمية</i></div>
+      <div class="quick-chip"><b>✦ FREE</b><i>تجربة محسنة</i></div>
+    </div>
+
+  </section>
+
+  <!-- TUTORIAL -->
+  <a
+    href="https://t.me/atraheeb7/55"
+    class="tutorial-link glass"
+  >
+
+    <div class="tutorial-icon">
+      🛡
+    </div>
+
+    <div class="tutorial-text">
+
+      <p>
+        حل مشكلة مطور مؤسسة غير موثوق
+      </p>
+
+      <span>
+        اضغط هنا لمشاهدة الشرح ←
+      </span>
+
+    </div>
+
+  </a>
+
+  <!-- FEATURES -->
+  <section class="features-panel glass">
+
+    <h2 class="section-title">
+      ✦ مميزات ايساين ✦
+    </h2>
+
+    <div class="features-grid">
+
+      <div class="feature-card">
+
+        <div class="feat-icon">
+          ✍️
+        </div>
+
+        <div class="feat-text">
+          توقيع التطبيقات بصيغة IPA
+        </div>
+
+      </div>
+
+      <div class="feature-card">
+
+        <div class="feat-icon">
+          📱
+        </div>
+
+        <div class="feat-text">
+          تثبيت بدون كمبيوتر
+        </div>
+
+      </div>
+
+      <div class="feature-card">
+
+        <div class="feat-icon">
+          🎓
+        </div>
+
+        <div class="feat-text">
+          دعم جميع شهادات المطورين
+        </div>
+
+      </div>
+
+      <div class="feature-card">
+
+        <div class="feat-icon">
+          ⚙️
+        </div>
+
+        <div class="feat-text">
+          تعديل ملفات التطبيق بسهولة
+        </div>
+
+      </div>
+
+      <div class="feature-card">
+
+        <div class="feat-icon">
+          🔧
+        </div>
+
+        <div class="feat-text">
+          إضافة أدوات وتعديلات للتطبيقات
+        </div>
+
+      </div>
+
+      <div class="feature-card">
+
+        <div class="feat-icon">
+          ⚡
+        </div>
+
+        <div class="feat-text">
+          سرعة في التنفيذ وواجهة احترافية
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- POWER FEATURES -->
+  <section class="power-panel glass">
+    <div class="power-head">
+      <b>⚡ مركز التجربة السريعة</b>
+      <span class="live-pill">● ONLINE</span>
+    </div>
+    <div class="power-list">
+      <div class="power-item">
+        <div class="pi">🚀</div>
+        <div><strong>أداء سريع وخفيف</strong><span>واجهة مصممة لتكون سلسة على الهاتف</span></div>
+      </div>
+      <div class="power-item">
+        <div class="pi">📲</div>
+        <div><strong>تجربة مخصصة لـ iPhone</strong><span>تصميم متجاوب مع الشاشات الصغيرة</span></div>
+      </div>
+      <div class="power-item">
+        <div class="pi">✨</div>
+        <div><strong>واجهة حديثة بالكامل</strong><span>Glass UI + إضاءة متحركة + مؤثرات تفاعلية</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <div class="footer glass">
+
+    <div class="footer-logo">
+      ESIGN
+    </div>
+
+    <div>
+      تم التطوير والبرمجة بواسطة
+      <a href="https://t.me/atraheebb">
+        اترهيب
+      </a>
+    </div>
+
+  </div>
+
+</main>
+
+<audio
+  id="successSound"
+  src="https://ashtemobile.tututweak.com/sound.mp3"
+  preload="none"
+  playsinline
+></audio>
+
+<script>
+
+/* ================= TOAST ================= */
+
+window.addEventListener('load', () => {
+
+  const toast = document.getElementById('toast');
+
+  setTimeout(() => {
+    toast.classList.add('show');
+  }, 400);
+
+  setTimeout(() => {
+
+    toast.classList.remove('show');
+    toast.classList.add('hide');
+
+  }, 3400);
+
+});
+
+
+/* ================= CANVAS ================= */
+
+const canvas = document.getElementById('bgCanvas');
+
+const ctx = canvas.getContext('2d');
+
+let stars = [];
+let W;
+let H;
+
+function resize() {
+
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+
+  stars = Array.from(
+    { length: 130 },
+    () => ({
+
+      x: Math.random() * W,
+      y: Math.random() * H,
+
+      r: Math.random() * 1.7,
+
+      op: Math.random(),
+
+      spd:
+        0.01 +
+        Math.random() * 0.015
+
+    })
+  );
+
+}
+
+function draw() {
+
+  ctx.clearRect(
+    0,
+    0,
+    W,
+    H
+  );
+
+  /* GRID */
+
+  ctx.strokeStyle =
+    'rgba(0,229,255,0.028)';
+
+  ctx.lineWidth = 1;
+
+  const gs = 60;
+
+  for (
+    let x = 0;
+    x < W;
+    x += gs
+  ) {
+
+    ctx.beginPath();
+
+    ctx.moveTo(x, 0);
+
+    ctx.lineTo(x, H);
+
+    ctx.stroke();
+
+  }
+
+  for (
+    let y = 0;
+    y < H;
+    y += gs
+  ) {
+
+    ctx.beginPath();
+
+    ctx.moveTo(0, y);
+
+    ctx.lineTo(W, y);
+
+    ctx.stroke();
+
+  }
+
+  /* STARS */
+
+  stars.forEach(s => {
+
+    ctx.fillStyle =
+      `rgba(80,220,255,${s.op})`;
+
+    ctx.beginPath();
+
+    ctx.arc(
+      s.x,
+      s.y,
+      s.r,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+
+    s.op += s.spd;
+
+    if (
+      s.op > 1 ||
+      s.op < 0
+    ) {
+      s.spd *= -1;
+    }
+
+  });
+
+  requestAnimationFrame(draw);
+
+}
+
+window.addEventListener(
+  'resize',
+  resize
+);
+
+resize();
+draw();
+
+
+/* ================= PARTICLES ================= */
+
+function spawnParticle() {
+
+  const p =
+    document.createElement('div');
+
+  p.className =
+    'particle';
+
+  const size =
+    2 + Math.random() * 4;
+
+  const colors = [
+
+    'rgba(0,229,255,0.45)',
+
+    'rgba(139,92,246,0.38)',
+
+    'rgba(236,72,153,0.38)'
+
+  ];
+
+  const color =
+    colors[
+      Math.floor(
+        Math.random() *
+        colors.length
+      )
+    ];
+
+  Object.assign(
+    p.style,
+    {
+
+      width:
+        size + 'px',
+
+      height:
+        size + 'px',
+
+      background:
+        color,
+
+      left:
+        Math.random() *
+        100 +
+        'vw',
+
+      animationDuration:
+        (
+          6 +
+          Math.random() * 8
+        ) +
+        's',
+
+      animationDelay:
+        Math.random() *
+        5 +
+        's',
+
+      boxShadow:
+        `0 0 ${size * 2}px ${color}`
+
+    }
+  );
+
+  document.body.appendChild(p);
+
+  setTimeout(
+    () => p.remove(),
+    14000
+  );
+
+}
+
+setInterval(
+  spawnParticle,
+  800
+);
+
+
+/* ================= DOWNLOAD ================= */
+
+function startDownload(
+  btn,
+  link
+) {
+
+  if (
+    btn.classList.contains(
+      'disabled'
+    )
+  ) return;
+
+  btn.classList.add(
+    'disabled'
+  );
+
+  const fill =
+    btn.querySelector(
+      '.progress-fill'
+    );
+
+  const btnText =
+    btn.querySelector(
+      '.btnText'
+    );
+
+  const successIcon =
+    btn.querySelector(
+      '.success-icon'
+    );
+
+  const sound =
+    document.getElementById(
+      'successSound'
+    );
+
+  let pct = 0;
+
+  const iv =
+    setInterval(() => {
+
+      pct += 1;
+
+      fill.style.width =
+        pct + '%';
+
+      btnText.innerText =
+        `جاري التثبيت... ${pct}%`;
+
+      if (pct >= 100) {
+
+        clearInterval(iv);
+
+        btnText.innerText =
+          'اكتمل بنجاح 🎉';
+
+        successIcon.style.display =
+          'inline-block';
+
+        sound.play().catch(
+          () => {}
+        );
+
+        setTimeout(() => {
+
+          window.location.href =
+            link;
+
+          setTimeout(() => {
+
+            window.location.href =
+              'https://t.me/atraheebb';
+
+          }, 2000);
+
+        }, 1000);
+
+      }
+
+    }, 45);
+
+}
+
+</script>
+
+</body>
+</html>
